@@ -1,13 +1,14 @@
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Chip } from '@/components/chip';
+import { MarcarPagaModal } from '@/components/marcar-paga-modal';
 import { useCategorias } from '@/hooks/use-categorias';
-import { formatarMoeda, parseMoeda } from '@/lib/currency-utils';
+import { useMarcarComoPaga } from '@/hooks/use-marcar-como-paga';
+import { formatarMoeda } from '@/lib/currency-utils';
 import { formatarDataBR } from '@/lib/date-utils';
-import { marcarContaComoPaga } from '@/lib/pagamentos';
 import { supabase } from '@/lib/supabase';
 import type { Conta, StatusConta } from '@/types/database';
 
@@ -35,9 +36,6 @@ export default function ContasScreen() {
   const [filtroCategoria, setFiltroCategoria] = useState<string | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<StatusConta | 'todos'>('todos');
 
-  const [contaParaPagar, setContaParaPagar] = useState<Conta | null>(null);
-  const [valorPagoTexto, setValorPagoTexto] = useState('');
-
   const carregarContas = useCallback(async () => {
     let query = supabase
       .from('contas')
@@ -59,20 +57,7 @@ export default function ContasScreen() {
     }, [carregarContas])
   );
 
-  function abrirModalPagamento(conta: Conta) {
-    setContaParaPagar(conta);
-    setValorPagoTexto(
-      conta.valor_estimado != null ? String(conta.valor_estimado).replace('.', ',') : ''
-    );
-  }
-
-  async function confirmarPagamento() {
-    if (!contaParaPagar) return;
-    const valor = parseMoeda(valorPagoTexto) ?? 0;
-    await marcarContaComoPaga(contaParaPagar, valor);
-    setContaParaPagar(null);
-    carregarContas();
-  }
+  const pagamento = useMarcarComoPaga(carregarContas);
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
@@ -180,7 +165,7 @@ export default function ContasScreen() {
                   {item.recorrente ? ` · ${item.frequencia}` : ''}
                 </Text>
                 {podeQuitar ? (
-                  <Pressable onPress={() => abrirModalPagamento(item)} hitSlop={8}>
+                  <Pressable onPress={() => pagamento.abrir(item)} hitSlop={8}>
                     <Text className="text-xs font-semibold text-emerald-600">Marcar como paga</Text>
                   </Pressable>
                 ) : null}
@@ -190,43 +175,13 @@ export default function ContasScreen() {
         }}
       />
 
-      <Modal
-        visible={!!contaParaPagar}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setContaParaPagar(null)}
-      >
-        <View className="flex-1 items-center justify-center bg-black/40 px-6">
-          <View className="w-full gap-4 rounded-2xl bg-white p-5 dark:bg-neutral-900">
-            <Text className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-              Marcar “{contaParaPagar?.nome}” como paga
-            </Text>
-            <TextInput
-              value={valorPagoTexto}
-              onChangeText={setValorPagoTexto}
-              keyboardType="decimal-pad"
-              placeholder="Valor pago (R$)"
-              placeholderTextColor="#9ca3af"
-              autoFocus
-              className="rounded-xl border border-neutral-300 px-4 py-3 text-base text-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
-            />
-            <View className="flex-row gap-3">
-              <Pressable
-                onPress={() => setContaParaPagar(null)}
-                className="flex-1 items-center rounded-xl border border-neutral-300 py-3 dark:border-neutral-700"
-              >
-                <Text className="text-neutral-700 dark:text-neutral-300">Cancelar</Text>
-              </Pressable>
-              <Pressable
-                onPress={confirmarPagamento}
-                className="flex-1 items-center rounded-xl bg-neutral-900 py-3 dark:bg-white"
-              >
-                <Text className="font-semibold text-white dark:text-neutral-900">Confirmar</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <MarcarPagaModal
+        conta={pagamento.conta}
+        valorTexto={pagamento.valorTexto}
+        onChangeValor={pagamento.setValorTexto}
+        onCancelar={pagamento.fechar}
+        onConfirmar={pagamento.confirmar}
+      />
     </SafeAreaView>
   );
 }
