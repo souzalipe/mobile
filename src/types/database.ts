@@ -42,6 +42,7 @@ export type Database = {
           icone?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       contas: {
         Row: {
@@ -98,6 +99,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       pagamentos: {
         Row: {
@@ -127,6 +129,7 @@ export type Database = {
           data_vencimento_referencia?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       preferencias_usuario: {
         Row: {
@@ -156,6 +159,7 @@ export type Database = {
           notificar_atraso?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
       push_subscriptions: {
         Row: {
@@ -185,6 +189,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       notificacoes_enviadas: {
         Row: {
@@ -214,6 +219,7 @@ export type Database = {
           canal?: CanalEnvio;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {
@@ -241,6 +247,7 @@ export type Database = {
           antecedencia_efetiva: number;
           urgencia: UrgenciaConta;
         };
+        Relationships: [];
       };
     };
     Functions: Record<string, never>;

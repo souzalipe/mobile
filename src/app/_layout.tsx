@@ -22,6 +22,9 @@ function RootNavigator() {
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="index" />
         <Stack.Screen name="perfil" />
+        <Stack.Screen name="contas/index" />
+        <Stack.Screen name="contas/nova" />
+        <Stack.Screen name="contas/[id]" />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>
