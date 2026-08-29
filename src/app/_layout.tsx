@@ -5,9 +5,11 @@ import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 function RootNavigator() {
   const { session, isLoading } = useAuth();
+  usePushNotifications(session);
 
   if (isLoading) {
     return (
