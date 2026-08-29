@@ -14,9 +14,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// No export web, o Expo Router pré-renderiza as rotas no Node (SSR), onde
+// `window` não existe — e o AsyncStorage.web usa `window.localStorage`.
+// Esse guard faz a sessão virar no-op durante o SSR, sem quebrar o build;
+// no navegador de verdade e no iOS/Android (onde `window` sempre existe),
+// o AsyncStorage funciona normalmente.
+const storage = {
+  getItem: (key: string) => (typeof window === 'undefined' ? Promise.resolve(null) : AsyncStorage.getItem(key)),
+  setItem: (key: string, value: string) =>
+    typeof window === 'undefined' ? Promise.resolve() : AsyncStorage.setItem(key, value),
+  removeItem: (key: string) =>
+    typeof window === 'undefined' ? Promise.resolve() : AsyncStorage.removeItem(key),
+};
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    storage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
