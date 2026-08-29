@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -46,6 +46,13 @@ export default function PerfilScreen() {
               </View>
             ) : null}
           </View>
+
+          <Link href="/config" asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-neutral-200 px-4 py-3.5 dark:border-neutral-800">
+              <Text className="text-base text-neutral-900 dark:text-neutral-50">Configurações</Text>
+              <Text className="text-neutral-400">›</Text>
+            </Pressable>
+          </Link>
 
           <Pressable
             onPress={handleSignOut}
