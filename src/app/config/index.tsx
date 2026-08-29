@@ -1,5 +1,6 @@
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Link, router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -64,6 +65,10 @@ export default function ConfiguracoesScreen() {
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
 
+  const [testeLocalStatus, setTesteLocalStatus] = useState<string | null>(null);
+  const [testeRemotoStatus, setTesteRemotoStatus] = useState<string | null>(null);
+  const [testandoRemoto, setTestandoRemoto] = useState(false);
+
   useEffect(() => {
     if (!session) return;
 
@@ -121,6 +126,31 @@ export default function ConfiguracoesScreen() {
       return;
     }
     setSalvo(true);
+  }
+
+  async function handleTesteLocal() {
+    setTesteLocalStatus(null);
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      setTesteLocalStatus('Permissão de notificação negada.');
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: { title: 'Contas em Dia', body: 'Notificação de teste local 👋' },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 2 },
+    });
+    setTesteLocalStatus('Agendada — deve aparecer em ~2 segundos.');
+  }
+
+  async function handleTesteRemoto() {
+    setTestandoRemoto(true);
+    setTesteRemotoStatus(null);
+
+    const { data, error } = await supabase.functions.invoke('enviar-notificacoes');
+    setTestandoRemoto(false);
+
+    setTesteRemotoStatus(error ? `Erro: ${error.message}` : JSON.stringify(data));
   }
 
   if (carregando) {
@@ -246,6 +276,41 @@ export default function ConfiguracoesScreen() {
             {salvando ? 'Salvando…' : 'Salvar preferências'}
           </Text>
         </Pressable>
+
+        <View className="gap-3">
+          <Text className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
+            TESTAR NOTIFICAÇÕES
+          </Text>
+
+          <Pressable
+            onPress={handleTesteLocal}
+            className="items-center rounded-xl border border-neutral-300 py-3 dark:border-neutral-700"
+          >
+            <Text className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+              Testar notificação local
+            </Text>
+          </Pressable>
+          {testeLocalStatus ? (
+            <Text className="text-xs text-neutral-500 dark:text-neutral-400">{testeLocalStatus}</Text>
+          ) : null}
+
+          <Pressable
+            onPress={handleTesteRemoto}
+            disabled={testandoRemoto}
+            className="items-center rounded-xl border border-neutral-300 py-3 disabled:opacity-40 dark:border-neutral-700"
+          >
+            <Text className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+              {testandoRemoto ? 'Executando…' : 'Rodar verificação de contas agora'}
+            </Text>
+          </Pressable>
+          {testeRemotoStatus ? (
+            <Text className="text-xs text-neutral-500 dark:text-neutral-400">{testeRemotoStatus}</Text>
+          ) : null}
+          <Text className="text-xs text-neutral-400">
+            Dispara agora a mesma checagem que roda 1x por dia: avisa por push sobre contas
+            atrasadas, vencendo hoje ou perto do vencimento.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
