@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import type { Categoria } from '@/types/database';
@@ -8,24 +8,15 @@ export function useCategorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let ativo = true;
-
-    supabase
-      .from('categorias')
-      .select('*')
-      .order('nome')
-      .then(({ data }) => {
-        if (ativo) {
-          setCategorias(data ?? []);
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      ativo = false;
-    };
+  const carregar = useCallback(async () => {
+    const { data } = await supabase.from('categorias').select('*').order('nome');
+    setCategorias(data ?? []);
+    setLoading(false);
   }, []);
 
-  return { categorias, loading };
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  return { categorias, loading, recarregar: carregar };
 }

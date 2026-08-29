@@ -25,6 +25,8 @@ function RootNavigator() {
         <Stack.Screen name="contas/index" />
         <Stack.Screen name="contas/nova" />
         <Stack.Screen name="contas/[id]" />
+        <Stack.Screen name="config/index" />
+        <Stack.Screen name="config/categorias" />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>

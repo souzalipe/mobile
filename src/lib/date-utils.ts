@@ -70,3 +70,18 @@ export function formatarDataBR(dataIso: string | null): string {
 export function hojeIso(): string {
   return dataIsoDoAno(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
 }
+
+/** Primeiro e último dia (YYYY-MM-DD) do mês de `from`, para filtrar
+ * consultas de "resumo do mês". */
+export function limitesDoMes(from = new Date()): { inicio: string; fim: string } {
+  const ano = from.getFullYear();
+  const mes = from.getMonth();
+  return {
+    inicio: dataIsoDoAno(ano, mes, 1),
+    fim: dataIsoDoAno(ano, mes, 31), // clampado para o último dia real do mês
+  };
+}
+
+export function nomeDoMesAtual(): string {
+  return new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
